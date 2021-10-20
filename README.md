@@ -1,5 +1,7 @@
 # input-event
 
+[![build](https://github.com/bang-olufsen/input-event/actions/workflows/build.yml/badge.svg)](https://github.com/bang-olufsen/input-event/actions/workflows/build.yml)
+
 A small C++11 header-only library for handling Linux input events
 
 ## Usage
@@ -23,6 +25,7 @@ int main()
     while (true);
 }
 ```
+
 ## Limitations
 
 * Does not natively support dynamic input devices (could be done via filewatch or udev)
