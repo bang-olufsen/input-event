@@ -1,10 +1,7 @@
-# input-event
+// Copyright (c) 2021 Bang & Olufsen a/s
+//
+// SPDX-License-Identifier: MIT
 
-A small C++11 header-only library for handling Linux input events
-
-## Usage
-
-```cpp
 #include <InputEvent.h>
 #include <iostream>
 
@@ -22,7 +19,3 @@ int main()
 
     while (true);
 }
-```
-## Limitations
-
-* Does not natively support dynamic input devices (could be done via filewatch or udev)
