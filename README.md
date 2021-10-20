@@ -2,6 +2,7 @@
 
 [![build](https://github.com/bang-olufsen/input-event/actions/workflows/build.yml/badge.svg)](https://github.com/bang-olufsen/input-event/actions/workflows/build.yml)
 [![Coverage Status](https://coveralls.io/repos/github/bang-olufsen/input-event/badge.svg?branch=main)](https://coveralls.io/github/bang-olufsen/input-event?branch=main)
+[![CodeQL](https://github.com/bang-olufsen/input-event/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/bang-olufsen/input-event/actions/workflows/codeql-analysis.yml)
 [![license](https://img.shields.io/badge/license-MIT_License-blue.svg?style=flat)](LICENSE)
 
 A small C++11 header-only library for handling Linux input events
