@@ -44,10 +44,8 @@ using InputEventDescriptors = std::vector<int>;
 class InputEvent {
 public:
     /// @brief InputEvent constructor
-    /// @param inputEventPrefix The input event prefix to use (default
-    /// /dev/input/event)
-    /// @param maxInputEvents The number of /dev/input/eventX files to monitor
-    /// (default 10)
+    /// @param inputEventPrefix The input event prefix to use (default /dev/input/event)
+    /// @param maxInputEvents The number of /dev/input/eventX files to monitor (default 10)
     InputEvent(const std::string& inputEventPrefix = "/dev/input/event", const uint8_t maxInputEvents = 10)
         : m_inputEventPrefix(inputEventPrefix)
         , m_maxInputEvents(maxInputEvents)
@@ -56,18 +54,13 @@ public:
     ~InputEvent() { unsubscribe(); }
 
     /// @brief Subscribe for input events matching the specified types and codes
-    /// In case of errors an input_event with type UINT16_MAX and code UINT16_MAX
-    /// will be injected with value set to the errno value. At the same time the
-    /// thread is stopped and a new subscribe function call is required.
+    /// In case of errors an input_event with type UINT16_MAX and code UINT16_MAX will be injected with value set to 
+    /// the errno value. At the same time the thread is stopped and a new subscribe function call is required.
     /// @note It is only possible to call subscribe once per instance
-    /// @param eventTypes A std::vector with event types from
-    /// <linux/input-event-codes.h>. Use UINT16_MAX for all types
-    /// @param eventCodes A std::vector with event codes from
-    /// <linux/input-event-codes.h>. Use UINT16_MAX for all codes
-    /// @param eventCallback A callback to be invoked when an event matching the
-    /// specified event types and codes is received
-    /// @return An int with the result (0 on success or or a negative value from
-    /// errno.h)
+    /// @param eventTypes A std::vector with event types from <linux/input-event-codes.h>. Use UINT16_MAX for all types
+    /// @param eventCodes A std::vector with event codes from <linux/input-event-codes.h>. Use UINT16_MAX for all codes
+    /// @param eventCallback A callback to be invoked when an event matching the specified event types and codes is received
+    /// @return An int with the result (0 on success or or a negative value from errno.h)
     int subscribe(const InputEventList eventTypes, const InputEventList eventCodes, const InputEventCallback eventCallback)
     {
         int result = -EINVAL;
@@ -125,8 +118,7 @@ public:
     }
 
     /// @brief Unsubscribe for input events
-    /// Stops the monitor thread. A new subscribe function call is required
-    /// afterwards.
+    /// Stops the monitor thread. A new subscribe function call is required afterwards.
     void unsubscribe()
     {
         m_stopThread.store(true);
@@ -137,10 +129,8 @@ public:
 
 private:
     /// @brief Polls for input events on the specified input descriptors
-    /// @param[in] inputDescriptors A reference to an InputEventDescriptors object
-    /// with input descriptors
-    /// @param[out] inputEventDescriptors A reference to an InputEventDescriptors
-    /// object to store input descriptors with events
+    /// @param[in] inputDescriptors A reference to an InputEventDescriptors object with input descriptors
+    /// @param[out] inputEventDescriptors A reference to an InputEventDescriptors object to store input descriptors with events
     /// @return An int with the result of the poll (see poll.h)
     int pollForInputEvent(const InputEventDescriptors& inputDescriptors, InputEventDescriptors& InputEventDescriptors)
     {
