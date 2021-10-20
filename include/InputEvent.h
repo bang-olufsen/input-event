@@ -153,7 +153,7 @@ private:
 
         int result = poll(pollDescriptors.data(), pollDescriptors.size(), 1000);
         if (result > 0) {
-            for (uint8_t index = 0; index < pollDescriptors.size(); ++index) {
+            for (size_t index = 0; index < pollDescriptors.size(); ++index) {
                 if (pollDescriptors.at(index).revents)
                     InputEventDescriptors.push_back(pollDescriptors.at(index).fd);
             }
