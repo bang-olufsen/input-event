@@ -22,8 +22,14 @@ int main()
         else if (event.code == UINT16_MAX)
             std::cerr << "Failed to read input events with error " << event.value << std::endl;
     });
-    if (errorCode)
+    if (errorCode < 0) {
         std::cerr << "Failed to subscribe for input events with error " << errorCode << std::endl;
+        return errorCode;
+    }
+
+    int value = inputEvent.value(EV_KEY, KEY_SPACE);
+    if (value >= 0)
+        std::cout << "Space button currently " << (value ? "pressed" : "released") << std::endl;
 
     while (true);
 }

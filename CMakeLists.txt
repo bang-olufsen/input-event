@@ -15,8 +15,8 @@ if (BUILD_TEST)
 
     CPMAddPackage(
         NAME turtle
-        GITHUB_REPOSITORY mat007/turtle
-        GIT_TAG v1.3.2
+        GITHUB_REPOSITORY bang-olufsen/turtle
+        GIT_TAG 23ecd64
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/external/turtle
         DOWNLOAD_ONLY True
         GIT_SHALLOW True

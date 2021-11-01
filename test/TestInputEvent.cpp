@@ -16,9 +16,12 @@ using namespace std::chrono_literals;
 TEST_CASE("InputEvent")
 {
     std::string inputEventPrefix = "/tmp/test-input-event";
+    std::string inputEventFile = inputEventPrefix + "0";
+    std::ofstream inputEventStream(inputEventFile.c_str(), std::ofstream::binary);
+
     Linux::Input::InputEvent inputEvent(inputEventPrefix);
 
-    SECTION("Negative tests")
+    SECTION("Test subscribe")
     {
         SECTION("Invalid event types")
         {
@@ -38,35 +41,47 @@ TEST_CASE("InputEvent")
             CHECK(errorCode == -EINVAL);
         }
 
-        SECTION("Invalid input event prefix")
+        SECTION("EV_KEY input")
         {
-            int errorCode = inputEvent.subscribe({ EV_KEY }, { KEY_COFFEE }, [](input_event&) {});
-            CHECK(errorCode == -EINVAL);
+            input_event event { 0, 0, EV_KEY, KEY_COFFEE, 0 };
+            std::array<char, sizeof(input_event)> eventBuffer;
+            std::memcpy(&eventBuffer, &event, sizeof(eventBuffer));
+
+            int errorCode = inputEvent.subscribe({ EV_KEY }, { KEY_COFFEE }, [](input_event& event) {
+                CHECK(event.type == EV_KEY);
+                CHECK(event.code == KEY_COFFEE);
+            });
+            CHECK_FALSE(errorCode);
+
+            inputEventStream.write(eventBuffer.data(), eventBuffer.size());
+            inputEventStream.flush();
+
+            // Wait for the poll to succeed and the callback to be invoked
+            std::this_thread::sleep_for(100ms);
         }
     }
 
-    SECTION("Positive test")
+    SECTION("Test value")
     {
-        input_event event { 0, 0, EV_KEY, KEY_COFFEE, 0 };
-        std::array<char, sizeof(input_event)> eventBuffer;
-        std::memcpy(&eventBuffer, &event, sizeof(eventBuffer));
+        SECTION("Invalid input")
+        {
+            int value = inputEvent.value(EV_ABS, ABS_RUDDER);
+            CHECK(value == -ENOTSUP);
+        }
 
-        std::string inputEventFile = inputEventPrefix + "0";
-        std::ofstream inputEventStream(inputEventFile.c_str(),
-            std::ofstream::binary);
+        SECTION("EV_KEY input")
+        {
+            int value = inputEvent.value(EV_KEY, KEY_COFFEE);
+            CHECK_FALSE(value);
+        }
 
-        int errorCode = inputEvent.subscribe({ EV_KEY }, { KEY_COFFEE }, [](input_event& event) {
-            CHECK(event.type == EV_KEY);
-            CHECK(event.code == KEY_COFFEE);
-        });
-        CHECK_FALSE(errorCode);
-
-        inputEventStream.write(eventBuffer.data(), eventBuffer.size());
-        inputEventStream.flush();
-
-        // Wait for the poll to succeed and the callback to be invoked
-        std::this_thread::sleep_for(100ms);
-        inputEventStream.close();
-        remove(inputEventFile.c_str());
+        SECTION("EV_SW input")
+        {
+            int value = inputEvent.value(EV_SW, SW_MICROPHONE_INSERT);
+            CHECK_FALSE(value);
+        }
     }
+
+    inputEventStream.close();
+    remove(inputEventFile.c_str());
 }

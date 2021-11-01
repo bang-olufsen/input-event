@@ -9,6 +9,7 @@
 #include <functional>
 #include <thread>
 #include <vector>
+#include <string>
 
 #include <fcntl.h>
 #include <linux/input.h>
@@ -47,11 +48,23 @@ public:
     /// @param inputEventPrefix The input event prefix to use (default /dev/input/event)
     /// @param maxInputEvents The number of /dev/input/eventX files to monitor (default 10)
     InputEvent(const std::string& inputEventPrefix = "/dev/input/event", const uint8_t maxInputEvents = 10)
-        : m_inputEventPrefix(inputEventPrefix)
-        , m_maxInputEvents(maxInputEvents)
     {
+        for (uint8_t inputEvent = 0; inputEvent < maxInputEvents; ++inputEvent) {
+            auto device = inputEventPrefix + std::to_string(inputEvent);
+            int result = open(device.c_str(), O_RDONLY);
+            if (result > 0)
+                m_inputDescriptors.push_back(result);
+        }
     }
-    ~InputEvent() { unsubscribe(); }
+
+    /// @brief InputEvent destructor
+    ~InputEvent() 
+    {
+        m_stopThread.store(true);
+
+        if (m_thread.joinable())
+            m_thread.join();
+    }
 
     /// @brief Subscribe for input events matching the specified types and codes
     /// In case of errors an input_event with type UINT16_MAX and code UINT16_MAX will be injected with value set to 
@@ -63,25 +76,14 @@ public:
     /// @return An int with the result (0 on success or or a negative value from errno.h)
     int subscribe(const InputEventList eventTypes, const InputEventList eventCodes, const InputEventCallback eventCallback)
     {
-        int result = -EINVAL;
-        InputEventDescriptors inputDescriptors;
-
-        unsubscribe();
-
         if (!eventTypes.size() || !eventCodes.size() || !eventCallback)
-            return result;
+            return -EINVAL;
 
-        for (uint8_t inputEvent = 0; inputEvent < m_maxInputEvents; ++inputEvent) {
-            auto device = m_inputEventPrefix + std::to_string(inputEvent);
-            int result = open(device.c_str(), O_RDONLY);
-            if (result > 0)
-                inputDescriptors.push_back(result);
-        }
-
-        if (inputDescriptors.empty())
-            return result;
+        if (m_inputDescriptors.empty())
+            return -EBADFD;
 
         m_stopThread.store(false);
+        auto& inputDescriptors = m_inputDescriptors;
         m_thread = std::thread([this, eventTypes, eventCodes, eventCallback, inputDescriptors]() {
             input_event event;
             InputEventDescriptors inputEventDescriptors;
@@ -117,14 +119,34 @@ public:
         return 0;
     }
 
-    /// @brief Unsubscribe for input events
-    /// Stops the monitor thread. A new subscribe function call is required afterwards.
-    void unsubscribe()
+    /// @brief Get current input event value for the specified event type and code
+    /// @param eventType An event type from <linux/input-event-codes.h>
+    /// @param eventCode An event code from <linux/input-event-codes.h>
+    /// @return An int with the result (the value (0 or 1) on success or or a negative value from errno.h)
+    int value(uint16_t eventType, uint16_t eventCode)
     {
-        m_stopThread.store(true);
+        if (m_inputDescriptors.empty())
+            return -EBADFD;
 
-        if (m_thread.joinable())
-            m_thread.join();
+        int result = 0;
+        std::vector<uint8_t> eventCodeBits((eventCode / 8) + 1);
+
+        for (auto inputDescriptor : m_inputDescriptors) {
+            switch (eventType) {
+            case EV_KEY:
+                ioctl(inputDescriptor, EVIOCGKEY(eventCodeBits.size()), eventCodeBits.data());
+                break;
+            case EV_SW:
+                ioctl(inputDescriptor, EVIOCGSW(eventCodeBits.size()), eventCodeBits.data());
+                break;
+            default:
+                return -ENOTSUP;
+            }
+
+            result |= (eventCodeBits[eventCode / 8] >> (eventCode % 8)) & 1;
+        }
+
+        return result;
     }
 
 private:
@@ -152,10 +174,9 @@ private:
         return result;
     }
 
-    const std::string m_inputEventPrefix;
-    const uint8_t m_maxInputEvents;
     std::thread m_thread;
     std::atomic<bool> m_stopThread;
+    InputEventDescriptors m_inputDescriptors;
 };
 
 } // namespace Linux::Input
