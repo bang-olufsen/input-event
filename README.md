@@ -7,6 +7,8 @@
 
 A small C++11 header-only library for handling Linux input events
 
+This library can be used for subscribing to Linux input events (e.g. key, mouse, switch, sound and LED events). It is also possible to readout the current value of an event (e.g. to know the state of a switch at boot). For more information on the usage please see the working example below and the unit tests.
+
 ## Usage
 
 ```cpp
@@ -37,4 +39,4 @@ int main()
 
 ## Limitations
 
-* Does not natively support dynamic input devices (could be done via filewatch or udev)
+* Does not natively support dynamic input devices (can be done via file watch or udev)
