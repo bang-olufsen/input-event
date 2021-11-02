@@ -80,7 +80,7 @@ public:
             return -EINVAL;
 
         if (m_inputDescriptors.empty())
-            return -EBADFD;
+            return -EBADF;
 
         m_stopThread.store(false);
         auto& inputDescriptors = m_inputDescriptors;
@@ -106,7 +106,7 @@ public:
                     }
                     inputEventDescriptors.clear();
                 } else {
-                    event = { 0, 0, UINT16_MAX, UINT16_MAX, errno };
+                    event = { 0, 0, UINT16_MAX, UINT16_MAX, -errno };
                     eventCallback(event);
                     m_stopThread.store(true);
                 }
@@ -122,31 +122,36 @@ public:
     /// @brief Get current input event value for the specified event type and code
     /// @param eventType An event type from <linux/input-event-codes.h>
     /// @param eventCode An event code from <linux/input-event-codes.h>
-    /// @return An int with the result (the value (0 or 1) on success or or a negative value from errno.h)
+    /// @return An int with the result (event value (0 or 1) on success or or a negative value from errno.h)
     int value(uint16_t eventType, uint16_t eventCode)
     {
         if (m_inputDescriptors.empty())
-            return -EBADFD;
+            return -EBADF;
 
-        int result = 0;
+        int eventValue = 0;
         std::vector<uint8_t> eventCodeBits((eventCode / 8) + 1);
 
         for (auto inputDescriptor : m_inputDescriptors) {
+            int result = -ENOTSUP;
+
             switch (eventType) {
             case EV_KEY:
-                ioctl(inputDescriptor, EVIOCGKEY(eventCodeBits.size()), eventCodeBits.data());
+                result = ioctl(inputDescriptor, EVIOCGKEY(eventCodeBits.size()), eventCodeBits.data());
                 break;
             case EV_SW:
-                ioctl(inputDescriptor, EVIOCGSW(eventCodeBits.size()), eventCodeBits.data());
+                result = ioctl(inputDescriptor, EVIOCGSW(eventCodeBits.size()), eventCodeBits.data());
                 break;
             default:
-                return -ENOTSUP;
+                return result;
             }
 
-            result |= (eventCodeBits[eventCode / 8] >> (eventCode % 8)) & 1;
+            if (result < 0)
+                return -errno;
+
+            eventValue |= (eventCodeBits[eventCode / 8] >> (eventCode % 8)) & 1;
         }
 
-        return result;
+        return eventValue;
     }
 
 private:

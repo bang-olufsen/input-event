@@ -72,13 +72,15 @@ TEST_CASE("InputEvent")
         SECTION("EV_KEY input")
         {
             int value = inputEvent.value(EV_KEY, KEY_COFFEE);
-            CHECK_FALSE(value);
+            // Will fail as we are using a regular file for testing
+            CHECK(value == -ENOTTY);
         }
 
         SECTION("EV_SW input")
         {
             int value = inputEvent.value(EV_SW, SW_MICROPHONE_INSERT);
-            CHECK_FALSE(value);
+            // Will fail as we are using a regular file for testing
+            CHECK(value == -ENOTTY);
         }
     }
 
