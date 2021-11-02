@@ -7,9 +7,9 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
 
 #include <fcntl.h>
 #include <linux/input.h>
@@ -58,7 +58,7 @@ public:
     }
 
     /// @brief InputEvent destructor
-    ~InputEvent() 
+    ~InputEvent()
     {
         m_stopThread.store(true);
 
@@ -67,7 +67,7 @@ public:
     }
 
     /// @brief Subscribe for input events matching the specified types and codes
-    /// In case of errors an input_event with type UINT16_MAX and code UINT16_MAX will be injected with value set to 
+    /// In case of errors an input_event with type UINT16_MAX and code UINT16_MAX will be injected with value set to
     /// the errno value. At the same time the thread is stopped and a new subscribe function call is required.
     /// @note It is only possible to call subscribe once per instance
     /// @param eventTypes A std::vector with event types from <linux/input-event-codes.h>. Use UINT16_MAX for all types
