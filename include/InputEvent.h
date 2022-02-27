@@ -84,7 +84,7 @@ public:
 
         m_stopThread.store(false);
         auto& inputDescriptors = m_inputDescriptors;
-        m_thread = std::thread([this, eventTypes, eventCodes, eventCallback, inputDescriptors]() {
+        m_thread = std::thread([this, eventTypes = std::move(eventTypes), eventCodes = std::move(eventCodes), eventCallback = std::move(eventCallback), inputDescriptors = std::move(inputDescriptors)]() {
             input_event event;
             InputEventDescriptors inputEventDescriptors;
 
